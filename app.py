@@ -1,49 +1,48 @@
 import streamlit as st
-import pickle
 import numpy as np
-import os
+import pickle
+import matplotlib.pyplot as plt
+
+# Load model
+model = pickle.load(open("model.pkl", "rb"))
 
 st.title("🎓 Student Performance Predictor")
 
-# Load model safely
-model = None
-
-if os.path.exists("model.pkl"):
-    try:
-        with open("model.pkl", "rb") as file:
-            model = pickle.load(file)
-    except Exception as e:
-        st.error("Error loading model")
-        st.write(e)
-else:
-    st.error("model.pkl file not found")
-
 # Inputs
-study_hours = st.slider("Study Hours", 0, 10)
-sleep_hours = st.slider("Sleep Hours", 0, 10)
-attendance = st.slider("Attendance (%)", 0, 100)
+study_hours = st.slider("Study Hours", 0, 10, 5)
+sleep_hours = st.slider("Sleep Hours", 0, 10, 6)
 
 # Prediction
 if st.button("Predict"):
-    input_data = np.array([[study_hours, sleep_hours, attendance]])
+    prediction = model.predict([[study_hours, sleep_hours]])[0]
 
-    if model is not None:
-        try:
-            prediction = model.predict(input_data)
-            st.success(f"Predicted Marks: {round(prediction[0], 2)}")
+    st.subheader(f"📊 Predicted Marks: {prediction:.2f}")
 
-            # Recommendations
-            st.subheader("Suggestions:")
-            if study_hours < 3:
-                st.write("👉 Increase study hours")
-            if sleep_hours < 6:
-                st.write("👉 Improve sleep schedule")
-            if attendance < 75:
-                st.write("👉 Attend more classes")
-
-        except Exception as e:
-            st.error("Prediction failed")
-            st.write(e)
-
+    # Performance category
+    if prediction < 40:
+        st.error("Poor Performance 😟")
+    elif prediction < 70:
+        st.warning("Average Performance 😐")
     else:
-        st.error("Model not loaded properly. Please check model.pkl")
+        st.success("Excellent Performance 🔥")
+
+    # Recommendations
+    st.subheader("📌 Recommendations")
+    if study_hours < 4:
+        st.info("👉 Increase study hours for better results")
+    if sleep_hours < 6:
+        st.info("👉 Get more sleep for improved focus")
+    if study_hours >= 6 and sleep_hours >= 7:
+        st.success("Great balance! Keep it up 💯")
+
+    # Graph
+    st.subheader("📈 Study Hours vs Predicted Marks")
+
+    hours = list(range(1, 11))
+    preds = [model.predict([[h, sleep_hours]])[0] for h in hours]
+
+    fig, ax = plt.subplots()
+    ax.plot(hours, preds)
+    ax.set_xlabel("Study Hours")
+    ax.set_ylabel("Predicted Marks")
+    st.pyplot(fig)
