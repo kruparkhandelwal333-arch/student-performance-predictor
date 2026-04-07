@@ -48,14 +48,3 @@ if st.button("Predict"):
     else:
         st.error("Model not loaded properly. Please check model.pkl")
 
-
-import matplotlib.pyplot as plt
-
-hours = [1,2,3,4,5,6,7,8]
-preds = [model.predict([[h, sleep_hours]])[0] for h in hours]
-
-fig, ax = plt.subplots()
-ax.plot(hours, preds)
-ax.set_xlabel("Study Hours")
-ax.set_ylabel("Predicted Marks")
-st.pyplot(fig)
